@@ -1,0 +1,50 @@
+name: 🏦 Bank Approver
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Debug mode'
+        type: choice
+        required: false
+        default: 'false'
+        options:
+          - 'false'
+          - 'true'
+
+permissions:
+  actions: read
+  contents: read
+  packages: read
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/skinexa/worker:latest
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ github.token }}
+      env:
+        NODE_ENV: production
+        DEBUG_MODE: ${{ inputs.debug }}
+    steps:
+      - name: 📙 Create env file
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { writeFileSync } = require('fs');
+            const secrets = ${{toJson(secrets)}};
+            writeFileSync(`/app/.env`, secrets['ENV']);
+
+      - name: 🔎 Approving bank transactions
+        run: node -e "require('/app/main.js').bankApprover()"
+
+      - name: ⬆️ Archive production artifacts
+        if: ${{ inputs.debug == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: recording-video
+          path: tmp/*.mp4

@@ -1,0 +1,42 @@
+name: 😚 Quiz Result Render
+
+run-name: ${{ inputs.payload }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      payload:
+        type: string
+        required: false
+        description: 'Payload'
+
+permissions:
+  actions: read
+  contents: read
+  packages: read
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/skinexa/bank-approver:latest
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ github.token }}
+      env:
+        NODE_ENV: production
+    steps:
+      - name: 📙 Create env file
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { writeFileSync } = require('fs');
+            const secrets = ${{toJson(secrets)}};
+            writeFileSync(`/app/.env`, secrets['ENV']);
+
+      - name: 📧 Render quiz result
+        uses: actions/github-script@v7
+        with:
+          script: |
+              const { renderQuizResult } = require('/app/main.js');
+              renderQuizResult('${{ inputs.payload }}');
