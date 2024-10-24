@@ -23,7 +23,7 @@ jobs:
   execute:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/skinexa/worker:latest
+      image: ghcr.io/skinexa/bank-approver:latest
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ github.token }}
